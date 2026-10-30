@@ -1,0 +1,306 @@
+:root {
+    --bg-main: #0b0f19;
+    --card-bg: rgba(22, 28, 45, 0.75);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --card-hover-border: rgba(99, 102, 241, 0.4);
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --accent: #06b6d4;
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-main);
+    color: #f1f5f9;
+    min-height: 100vh;
+}
+
+.fs-xs { font-size: 0.75rem; }
+.fs-xxs { font-size: 0.65rem; }
+
+/* Navbar */
+.navbar {
+    background: rgba(11, 15, 25, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+
+.brand-icon {
+    width: 36px;
+    height: 36px;
+    background: linear-gradient(135deg, #4f46e5, #06b6d4);
+    border-radius: 10px;
+}
+
+.brand-avatar {
+    width: 60px;
+    height: 60px;
+    background: rgba(79, 70, 229, 0.15);
+    border: 1px solid rgba(79, 70, 229, 0.3);
+    border-radius: 50%;
+}
+
+.live-pill {
+    background: rgba(16, 185, 129, 0.12);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+}
+
+.pulse-indicator {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+    animation: pulse 1.8s infinite cubic-bezier(0.66, 0, 0, 1);
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+/* Cards & Glassmorphism */
+.dashboard-card, .auth-card {
+    background: var(--card-bg);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    transition: all 0.25s ease;
+}
+
+.dashboard-card:hover {
+    border-color: var(--card-hover-border);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+}
+
+/* KPI Cards */
+.kpi-card {
+    background: rgba(22, 28, 45, 0.6);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.kpi-icon-box {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Progress bars */
+.progress {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    transition: width 0.6s ease;
+}
+
+/* Status Badges */
+.badge-status-Idle {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+.badge-status-Printing {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.badge-status-Warning {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.badge-status-Error {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.badge-status-Offline {
+    background-color: rgba(100, 116, 139, 0.15);
+    color: #94a3b8;
+    border: 1px solid rgba(100, 116, 139, 0.3);
+}
+.badge-status-Unknown {
+    background-color: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.3);
+}
+
+/* Table styling */
+.table-dark {
+    --bs-table-bg: transparent;
+}
+.table-dark th {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+.table-dark td {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* ------------------------------------------------------------------ */
+/* Printer issue cards                                                 */
+/* ------------------------------------------------------------------ */
+.issue-card {
+    display: flex;
+    flex-direction: column;
+    border-width: 2px;
+}
+
+.issue-card-critical { border-color: rgba(239, 68, 68, 0.55); }
+.issue-card-warning { border-color: rgba(245, 158, 11, 0.55); }
+.issue-card-ok { border-color: rgba(16, 185, 129, 0.45); }
+.issue-card-unknown { border-color: rgba(148, 163, 184, 0.4); }
+.issue-card-info { border-color: rgba(59, 130, 246, 0.45); }
+
+.issue-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.7rem 0.9rem;
+    border-radius: 12px;
+    font-size: 1.05rem;
+    font-weight: 700;
+}
+
+.issue-banner i { font-size: 1.35rem; }
+
+.issue-banner-critical {
+    background: rgba(239, 68, 68, 0.18);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.45);
+}
+
+.issue-banner-warning {
+    background: rgba(245, 158, 11, 0.18);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.45);
+}
+
+.issue-banner-ok {
+    background: rgba(16, 185, 129, 0.18);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.45);
+}
+
+.issue-banner-unknown {
+    background: rgba(148, 163, 184, 0.12);
+    color: #cbd5e1;
+    border: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.issue-banner-info {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.4);
+}
+
+/* "What to do" panel on real-printer cards (replaces the Fix It button). */
+.what-todo-panel {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    background: rgba(79, 70, 229, 0.12);
+    border: 1px solid rgba(99, 102, 241, 0.4);
+    color: #a5b4fc;
+    border-radius: 12px;
+    padding: 0.7rem 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.issue-help {
+    color: #94a3b8;
+    margin-bottom: 0;
+}
+
+.issue-fix-button {
+    font-weight: 700;
+    letter-spacing: 0.01em;
+}
+
+.issue-fix-critical {
+    background-color: var(--danger);
+    border-color: var(--danger);
+    color: #ffffff;
+}
+.issue-fix-critical:hover {
+    background-color: #dc2626;
+    border-color: #dc2626;
+    color: #ffffff;
+}
+
+.issue-fix-warning {
+    background-color: var(--warning);
+    border-color: var(--warning);
+    color: #1f2937;
+}
+.issue-fix-warning:hover {
+    background-color: #d97706;
+    border-color: #d97706;
+    color: #1f2937;
+}
+
+.issue-fix-ok {
+    background-color: rgba(16, 185, 129, 0.15);
+    border-color: rgba(16, 185, 129, 0.4);
+    color: #6ee7b7;
+}
+
+/* ------------------------------------------------------------------ */
+/* Lightweight toast notifications                                     */
+/* ------------------------------------------------------------------ */
+.toast-stack {
+    position: fixed;
+    right: 1rem;
+    bottom: 1rem;
+    z-index: 1080;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-width: 22rem;
+}
+
+.mini-toast {
+    padding: 0.65rem 0.9rem;
+    border-radius: 10px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    background: rgba(22, 28, 45, 0.95);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    animation: toast-in 0.2s ease-out;
+}
+
+.mini-toast-success {
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #6ee7b7;
+}
+
+.mini-toast-danger {
+    border: 1px solid rgba(239, 68, 68, 0.5);
+    color: #fca5a5;
+}
+
+@keyframes toast-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
