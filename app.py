@@ -19,7 +19,7 @@ from monitor import (init_monitor, poll_all_printers, trigger_print_job,
                      poll_snmp_printer, diagnose_printer)
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = 'smart-printer-ai-secret-key-39281'
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-only-change-me')
 app.config['MONGO_URI'] = mongo_db.MONGO_URI
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading')
 
