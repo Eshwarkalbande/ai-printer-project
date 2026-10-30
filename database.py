@@ -12,12 +12,10 @@ from datetime import datetime
 DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'printer_system.db')
 
 
-def get_db():
-    """Get a database connection with row factory configured."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
-
+if os.environ.get('VERCEL'):
+    DB_PATH = '/tmp/printer_system.db'
+else:
+    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'printer_system.db')
 
 # ---------------------------------------------------------------------------
 # Scripted demo fleet
