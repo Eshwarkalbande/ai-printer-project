@@ -91,122 +91,124 @@ def ensure_demo_fleet(cursor):
 
 def init_db():
     """Initialize database tables and seed default admin user and sample printers."""
-    conn = get_db()
+    conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
     cursor = conn.cursor()
+    try:
+        # Users table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                role TEXT DEFAULT 'admin',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
 
-    # Users table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username TEXT UNIQUE NOT NULL,
-            email TEXT UNIQUE NOT NULL,
-            password_hash TEXT NOT NULL,
-            role TEXT DEFAULT 'admin',
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+        # Printers table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS printers (
+                id TEXT PRIMARY KEY,
+                name TEXT NOT NULL,
+                model TEXT NOT NULL,
+                ip_address TEXT DEFAULT '127.0.0.1',
+                snmp_community TEXT DEFAULT 'public',
+                snmp_port INTEGER DEFAULT 161,
+                mode TEXT DEFAULT 'simulation',
+                status TEXT DEFAULT 'Idle',
+                toner_black INTEGER DEFAULT 85,
+                toner_cyan INTEGER DEFAULT 90,
+                toner_magenta INTEGER DEFAULT 75,
+                toner_yellow INTEGER DEFAULT 80,
+                paper_level INTEGER DEFAULT 95,
+                drum_wear INTEGER DEFAULT 12,
+                fuser_temp INTEGER DEFAULT 185,
+                total_pages INTEGER DEFAULT 12450,
+                jammed INTEGER DEFAULT 0,
+                data_source TEXT DEFAULT 'simulation',
+                last_scan_at REAL,
+                scan_report TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
 
-    # Printers table
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS printers (
-            id TEXT PRIMARY KEY,
-            name TEXT NOT NULL,
-            model TEXT NOT NULL,
-            ip_address TEXT DEFAULT '127.0.0.1',
-            snmp_community TEXT DEFAULT 'public',
-            snmp_port INTEGER DEFAULT 161,
-            mode TEXT DEFAULT 'simulation',
-            status TEXT DEFAULT 'Idle',
-            toner_black INTEGER DEFAULT 85,
-            toner_cyan INTEGER DEFAULT 90,
-            toner_magenta INTEGER DEFAULT 75,
-            toner_yellow INTEGER DEFAULT 80,
-            paper_level INTEGER DEFAULT 95,
-            drum_wear INTEGER DEFAULT 12,
-            fuser_temp INTEGER DEFAULT 185,
-            total_pages INTEGER DEFAULT 12450,
-            jammed INTEGER DEFAULT 0,
-            data_source TEXT DEFAULT 'simulation',
-            last_scan_at REAL,
-            scan_report TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-    ''')
+        # Lightweight migration: databases created before the 'jammed' column was
+        # introduced are upgraded in place so no manual reset is required.
+        cursor.execute('PRAGMA table_info(printers)')
+        existing_columns = [row['name'] for row in cursor.fetchall()]
+        if 'jammed' not in existing_columns:
+            cursor.execute('ALTER TABLE printers ADD COLUMN jammed INTEGER DEFAULT 0')
+        if 'data_source' not in existing_columns:
+            cursor.execute("ALTER TABLE printers ADD COLUMN data_source TEXT DEFAULT 'simulation'")
+        if 'last_scan_at' not in existing_columns:
+            cursor.execute('ALTER TABLE printers ADD COLUMN last_scan_at REAL')
+        if 'scan_report' not in existing_columns:
+            cursor.execute('ALTER TABLE printers ADD COLUMN scan_report TEXT')
 
-    # Lightweight migration: databases created before the 'jammed' column was
-    # introduced are upgraded in place so no manual reset is required.
-    cursor.execute('PRAGMA table_info(printers)')
-    existing_columns = [row['name'] for row in cursor.fetchall()]
-    if 'jammed' not in existing_columns:
-        cursor.execute('ALTER TABLE printers ADD COLUMN jammed INTEGER DEFAULT 0')
-    if 'data_source' not in existing_columns:
-        cursor.execute("ALTER TABLE printers ADD COLUMN data_source TEXT DEFAULT 'simulation'")
-    if 'last_scan_at' not in existing_columns:
-        cursor.execute('ALTER TABLE printers ADD COLUMN last_scan_at REAL')
-    if 'scan_report' not in existing_columns:
-        cursor.execute('ALTER TABLE printers ADD COLUMN scan_report TEXT')
+        # Print jobs log
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS print_jobs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                printer_id TEXT NOT NULL,
+                job_name TEXT NOT NULL,
+                pages INTEGER NOT NULL,
+                user_name TEXT DEFAULT 'system',
+                status TEXT DEFAULT 'Completed',
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (printer_id) REFERENCES printers(id)
+            )
+        ''')
 
-    # Print jobs log
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS print_jobs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            printer_id TEXT NOT NULL,
-            job_name TEXT NOT NULL,
-            pages INTEGER NOT NULL,
-            user_name TEXT DEFAULT 'system',
-            status TEXT DEFAULT 'Completed',
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (printer_id) REFERENCES printers(id)
-        )
-    ''')
+        # Telemetry history for AI trends & analytics
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS telemetry_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                printer_id TEXT NOT NULL,
+                toner_black INTEGER,
+                paper_level INTEGER,
+                drum_wear INTEGER,
+                fuser_temp INTEGER,
+                total_pages INTEGER,
+                failure_risk_score REAL,
+                timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (printer_id) REFERENCES printers(id)
+            )
+        ''')
 
-    # Telemetry history for AI trends & analytics
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS telemetry_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            printer_id TEXT NOT NULL,
-            toner_black INTEGER,
-            paper_level INTEGER,
-            drum_wear INTEGER,
-            fuser_temp INTEGER,
-            total_pages INTEGER,
-            failure_risk_score REAL,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (printer_id) REFERENCES printers(id)
-        )
-    ''')
+        # Predictive maintenance alerts
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS alerts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                printer_id TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                category TEXT NOT NULL,
+                message TEXT NOT NULL,
+                is_resolved INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (printer_id) REFERENCES printers(id)
+            )
+        ''')
 
-    # Predictive maintenance alerts
-    cursor.execute('''
-        CREATE TABLE IF NOT EXISTS alerts (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            printer_id TEXT NOT NULL,
-            severity TEXT NOT NULL,
-            category TEXT NOT NULL,
-            message TEXT NOT NULL,
-            is_resolved INTEGER DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (printer_id) REFERENCES printers(id)
-        )
-    ''')
+        conn.commit()
 
-    conn.commit()
+        # Seed default admin user if not exists
+        cursor.execute('SELECT id FROM users WHERE username = ?', ('admin',))
+        if not cursor.fetchone():
+            hashed = generate_password_hash('admin123')
+            cursor.execute(
+                'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
+                ('admin', 'admin@printer.local', hashed, 'admin')
+            )
+        # Seed (or restore) the scripted demo fleet so the dashboard always shows
+        # the five distinct, clearly visible printer issue states.
+        ensure_demo_fleet(cursor)
 
-    # Seed default admin user if not exists
-    cursor.execute('SELECT id FROM users WHERE username = ?', ('admin',))
-    if not cursor.fetchone():
-        hashed = generate_password_hash('admin123')
-        cursor.execute(
-            'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
-            ('admin', 'admin@printer.local', hashed, 'admin')
-        )
-    # Seed (or restore) the scripted demo fleet so the dashboard always shows
-    # the five distinct, clearly visible printer issue states.
-    ensure_demo_fleet(cursor)
-
-    conn.commit()
-    conn.close()
+        conn.commit()
+    finally:
+        conn.close()
 
 
 def authenticate_user(username_or_email, password):
