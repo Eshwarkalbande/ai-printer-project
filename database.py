@@ -9,24 +9,24 @@ import json
 from werkzeug.security import generate_password_hash, check_password_hash
 from datetime import datetime
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'printer_system.db')
-
-
-if os.environ.get('VERCEL'):
+# Vercel pe filesystem read-only hai, sirf /tmp writable hai
+VERCEL = bool(os.environ.get('VERCEL'))
+if VERCEL:
     DB_PATH = '/tmp/printer_system.db'
 else:
     DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'printer_system.db')
 
+
+def get_db():
+    """Return a SQLite connection with dict-like rows."""
+    conn = sqlite3.connect(DB_PATH, timeout=30, check_same_thread=False)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
 # ---------------------------------------------------------------------------
 # Scripted demo fleet
 # ---------------------------------------------------------------------------
-# Every entry is tuned so that the dashboard shows exactly ONE obvious,
-# plain-language problem per printer:
-#   PRN-001 -> No Paper      (paper_level = 0)
-#   PRN-002 -> No Ink        (toner_black = 0)
-#   PRN-003 -> Paper Jam     (jammed = 1)
-#   PRN-004 -> Overheating   (fuser_temp > 210)
-#   PRN-005 -> No Issues     (all values healthy)
 DEMO_FLEET = [
     {
         'id': 'PRN-001', 'name': 'HP LaserJet Enterprise M608', 'model': 'HP M608x',
@@ -91,8 +91,7 @@ def ensure_demo_fleet(cursor):
 
 def init_db():
     """Initialize database tables and seed default admin user and sample printers."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
+    conn = get_db()
     cursor = conn.cursor()
     try:
         # Users table
@@ -135,8 +134,7 @@ def init_db():
             )
         ''')
 
-        # Lightweight migration: databases created before the 'jammed' column was
-        # introduced are upgraded in place so no manual reset is required.
+        # Lightweight migration for older databases
         cursor.execute('PRAGMA table_info(printers)')
         existing_columns = [row['name'] for row in cursor.fetchall()]
         if 'jammed' not in existing_columns:
@@ -202,8 +200,6 @@ def init_db():
                 'INSERT INTO users (username, email, password_hash, role) VALUES (?, ?, ?, ?)',
                 ('admin', 'admin@printer.local', hashed, 'admin')
             )
-        # Seed (or restore) the scripted demo fleet so the dashboard always shows
-        # the five distinct, clearly visible printer issue states.
         ensure_demo_fleet(cursor)
 
         conn.commit()
@@ -459,3 +455,8 @@ def get_telemetry_trends(printer_id=None, limit=20):
     rows = [dict(r) for r in cursor.fetchall()]
     conn.close()
     return list(reversed(rows))
+
+
+# Vercel pe /tmp har cold start pe khali hota hai, isliye import pe hi tables bana do
+if VERCEL:
+    init_db()
